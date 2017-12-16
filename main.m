@@ -196,7 +196,6 @@ end
             vicon_frame_number(2) = MyClient.GetFrameNumber().FrameNumber;
         end
         
-        %         onBufferedDataAvailable
         % only action when new datapacket arrived
         dataPacket = varargin{3}{2};
         id = h.XsDataPacket_deviceId(dataPacket);
@@ -361,6 +360,10 @@ end
                 result = struct('IMU1', IMU1, 'IMU2', IMU2, 'IMU3', IMU3, 'IMU4', IMU4,...
                     'IMU5', IMU5, 'IMU6', IMU6, 'IMU7', IMU7, 'IMU8', IMU8);
         end
+        vicon_data = struct('frame_number', vicon_frame_number, 'frame_total', frame_total);
+        result.vicon_data = vicon_data;
+        force_plate_data = xls
+        result.force_plate_data = force_plate_data;
     end
 end
 
