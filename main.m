@@ -12,181 +12,56 @@ saveMatData = true;
 % left_COP_offset = [-5.8; -13; -15.7];
 % right_COP_offset = [1.04; -16.6; -14.2];
 
-%% Scanning connection ports
+Fs = 100; % frequency of data
+maxSamples = 1000; % set size of data to be recorded
+maxSamplesPreLocate = round(maxSamples*1.05);
+
+%% define variables
+
+
 h = actxserver('xsensdeviceapi_com64.IXsensDeviceApi');
 s =  h.XsScanner_scanPorts(0,100,true,true);		%检查所有com口
-if isempty(s)
-    fprintf( '\n Connection ports scanned - nothing found. \n' );
-    return
-else
-    fprintf( '\n Connection ports scanned \n' );
-    % open port
-    [num_ports, ~] = size(s);
-    deviceID = zeros(1, num_ports, 'uint32');
-    bandRate = zeros(1, num_ports, 'int32');
-    for i = 1:num_ports
-        deviceID(i) = s{i, 1};
-        bandRate(i) = s{i, 4};
-    end
-    %cell s的第三列port信息实在难以取出来，每次都用s来调用
-    fprintf('\n There are : %d', num_ports);
-    fprintf(' devices\n');
-end
-
+[num_ports, ~] = size(s);
 device = uint64(zeros(1, num_ports));
-%打开所有端口
-for i = 1:num_ports
-    h.XsControl_openPort(s{i, 3}, bandRate(i), 0, true);        %Open a communication channel on serial port with the given portname
-    device(i) = h.XsControl_device(deviceID(i));        %Returns the XsDevice interface object associated with the supplied deviceId. 
-end
-
-% 我也不知道showIntertialData能说明什么，反正官方
-showIntertialData = false(1,num_ports);
-for i = 1:num_ports
-    showIntertialData(i) = h.XsDeviceId_isImu(deviceID(i));     %Test if this device ID represents an IMU. 
-end
+deviceID = zeros(1, num_ports, 'uint32');
+bandRate = zeros(1, num_ports, 'int32');
+initializeXsens();
 
 
+path(path,'D:\Software\DataStream SDK\Win64\MATLAB');
+Client.LoadViconDataStreamSDK();
+MyClient = Client();
+initializeVicon();
+subject_name = MyClient.GetSubjectName(1).SubjectName;
+vicon_frame_rate = MyClient.GetFrameRate().FrameRateHz;
+marker_name = MyClient.GetMarkerName(subject_name, 4).MarkerName;
 
-%% Enabling software Kalman filtering
-% When software filtering is enabled it is possible to obtain
-% orientation data without setting orientation as an output (in that
-% case calibrated data or SDI and magnetic field data are necessary). If
-% orientation is set as an output, enabling software filtering is not
-% necessary.
-for i = 1:num_ports
-    h.XsDevice_setOptions(device(i), h.XsOption_XSO_Orientation, 0);
-    % Compute orientation, the orientation is only computed in one stream.
-    % If not specified the system will decide: when reading from file it will
-    % use XSO_OrientationInBufferedStream, otherwise XSO_OrientationInLiveStream
-end
-
-%% Getting information about the devices
-for i = 1:num_ports
-    % put device in config mode
-    h.XsDevice_gotoConfig(device(i));
-end
-
-Fs = 100; % frequency of data
-% first column is the data identifier, second column is the frequency
-% frequency of zero means that this data is send with each pakket.
-if (showIntertialData)
-    outputConfig_new = {h.XsDataIdentifier_XDI_PacketCounter,0;   % sample counter
-        h.XsDataIdentifier_XDI_SampleTimeFine,0;   % sample time fine
-        h.XsDataIdentifier_XDI_DeltaV,Fs; % dv, 100Hz
-        h.XsDataIdentifier_XDI_DeltaQ,Fs; % dq, 100Hz
-        h.XsDataIdentifier_XDI_MagneticField,Fs}; % magnetic field, 100Hz
-else
-    outputConfig_new = {h.XsDataIdentifier_XDI_PacketCounter,0;   % Packet counter, increments every packet.
-        h.XsDataIdentifier_XDI_SampleTimeFine,0;   % sample time fine
-        h.XsDataIdentifier_XDI_Quaternion,Fs; % orientation in quats, 100Hz
-        h.XsDataIdentifier_XDI_DeltaV,Fs; % dv, 100Hz
-        h.XsDataIdentifier_XDI_DeltaQ,Fs; % dq, 100Hz
-        h.XsDataIdentifier_XDI_MagneticField,Fs; % magnetic field, 100Hz
-        h.XsDataIdentifier_XDI_StatusWord,0};  % status word (contains clipping)
-end
-for i = 1:num_ports
-    %set to the new configuration
-    h.XsDevice_setOutputConfiguration(device(i),outputConfig_new);
-end
-
-
-%% Creating log file
-for i = 1:num_ports
-    filename = [cd '\logs\logfile_' dec2hex(deviceID(i)) '.mtb'];
-    h.XsDevice_createLogFile(device(i),filename);
-end
-
-%% preallocation
-maxSamples = 1000; % set size of data to be recorded
-maxSamplesPreLocate = round(maxSamples*1.05); % set size of data prelocated, because of eventhandling the
-% measured data can be more than maxSamples
-
+iSample = ones(1, num_ports, 'int64'); % counter of current point
+% data of xsens
 gyr = zeros(maxSamplesPreLocate,3, num_ports);
 acc = zeros(maxSamplesPreLocate,3, num_ports);
 mag = zeros(maxSamplesPreLocate,3, num_ports);
 euler_ls_xda = zeros(maxSamplesPreLocate,3, num_ports);
 timeStamp = zeros(maxSamplesPreLocate,1, num_ports);
 
-% record the frame number of vicon to see if it have the same frequency as Xsens
-vicon_all_frame_number = zeros(maxSamplesPreLocate, 1, 'int64');
+% data of vicon
+vicon_frame_number = zeros(maxSamplesPreLocate, 1, 'int64');
 
-iSample = ones(1, num_ports, 'int64'); % counter of current point
-%% Entering measurement mode
-for i = 1:num_ports
-    % fprintf( '\n Activate measurement mode \n' );
-    h.XsDevice_gotoMeasurement(device(i));
-    % start recording
-    h.XsDevice_startRecording(device(i));
-    % fprintf('\n Logfile: %s created, start recording.\n',filename);
-end
 
-%% Setup the vicon
-path(path,'D:\Software\DataStream SDK\Win64\MATLAB');
-% Load the SDK
-Client.LoadViconDataStreamSDK();
-% Connect as a client to the Vicon server
-MyClient = Client();
-MyClient.Connect('localhost:801');
-MyClient.SetStreamMode( StreamMode.ClientPull);
-
-% MyClient = Client();
-% MyClient.Connect( 'localhost' );
 
 %% event handling
-% register eventhandler回调函数
 h.registerevent({'onDataAvailable',@eventhandlerXsens});
 h.setCallbackOption(h.XsComCallbackOptions_XSC_Packet, h.XsComCallbackOptions_XSC_None);
-
-MyClient.GetFrame();
-MyClient.GetTimecode()
-vicon_start_end_number(1) = MyClient.GetFrameNumber().FrameNumber;
 % show events using h.events and h.eventlisteners too see which are registerd;
-
-%% receive data
 fprintf( ' Reading data from devices... \n' );
 while iSample(1) <= maxSamples + 5
     pause(.2)
 end
 
 
-%% Disconnect and dispose
-MyClient.Disconnect();
-% Unload the SDK
-% Client.UnloadViconDataStreamSDK();
-
-
-for i = 1: num_ports
-    % Disabling channel
-    h.XsDevice_stopRecording(device(i));
-end
-
-for i = 1: num_ports
-    h.XsDevice_closeLogFile(device(i));
-    % close port and object
-end
-
-for i = 1: num_ports
-    % close port and object
-    h.XsControl_closePort(s{i, 3});
-    h.XsControl_close();
-end
-
-delete(h); % release COM-object
-clear h;
-
 %% save and show data
-
-fprintf( ' ...done \n' );
-vicon_start_end_number(2) = vicon_all_frame_number(maxSamples);
-frame_total = vicon_start_end_number(2) - vicon_start_end_number(1);
-fprintf(' There are : %d vicon frames \n', frame_total);
-% fprintf('vicon frames');
-
+closeConnection();
 result = getFormattedResult();
-if saveMatData
-    save result result
-end
 
 % % 用于确定相应的device
 % for i = 1: num_ports
@@ -200,25 +75,17 @@ end
 plot(result.vicon_data.vicon(1:maxSamples)); 
 
 
-
-
-
-%% event handling, 获得数据最核心的函数
+%% 每当Client收到Xsens的数据，都会回调该函数
     function eventhandlerXsens(varargin)
-        
-%         % 检测尾部是否也对齐了
-%         if iSample(1) == maxSamples - 1
-%             MyClient.GetFrame();
-%             vicon_frame_number(2) = MyClient.GetFrameNumber().FrameNumber;
-%         end
         
         % only action when new datapacket arrived
         dataPacket = varargin{3}{2};
         id = h.XsDataPacket_deviceId(dataPacket);
         
+        % 仅在第一个device回调时调用vicon数据
         if id == deviceID(1)
             MyClient.GetFrame();
-            vicon_all_frame_number(iSample(1)) = MyClient.GetFrameNumber().FrameNumber;
+            vicon_frame_number(iSample(1)) = MyClient.GetFrameNumber().FrameNumber;
         end
         
         for j = 1: num_ports
@@ -254,22 +121,132 @@ plot(result.vicon_data.vicon(1:maxSamples));
     end
 
 
+    function initializeXsens()
+        if isempty(s)
+            fprintf( '\n Connection ports scanned - nothing found. \n' );
+            return
+        else
+            fprintf( '\n Connection ports scanned \n' );
+            % open port
+            for iConnect = 1:num_ports
+                deviceID(iConnect) = s{iConnect, 1};
+                bandRate(iConnect) = s{iConnect, 4};
+            end
+            %cell s的第三列port信息实在难以取出来，每次都用s来调用
+            fprintf('\n There are : %d', num_ports);
+            fprintf(' devices\n');
+        end
+        
+        %打开所有端口
+        for iConnect = 1:num_ports
+            h.XsControl_openPort(s{iConnect, 3}, bandRate(iConnect), 0, true);        %Open a communication channel on serial port with the given portname
+            device(iConnect) = h.XsControl_device(deviceID(iConnect));        %Returns the XsDevice interface object associated with the supplied deviceId.
+        end
+        
+        % 我也不知道showIntertialData能说明什么，反正官方
+        showIntertialData = false(1,num_ports);
+        for iConnect = 1:num_ports
+            showIntertialData(iConnect) = h.XsDeviceId_isImu(deviceID(iConnect));     %Test if this device ID represents an IMU.
+        end
+        
+        
+        
+        %% Enabling software Kalman filtering
+        for iConnect = 1:num_ports
+            h.XsDevice_setOptions(device(iConnect), h.XsOption_XSO_Orientation, 0);
+        end
+        
+        %% Getting information about the devices
+        for iConnect = 1:num_ports
+            % put device in config mode
+            h.XsDevice_gotoConfig(device(iConnect));
+        end
+        
+        % first column is the data identifier, second column is the frequency
+        % frequency of zero means that this data is send with each pakket.
+        if (showIntertialData)
+            outputConfig_new = {h.XsDataIdentifier_XDI_PacketCounter,0;   % sample counter
+                h.XsDataIdentifier_XDI_SampleTimeFine,0;   % sample time fine
+                h.XsDataIdentifier_XDI_DeltaV,Fs; % dv, 100Hz
+                h.XsDataIdentifier_XDI_DeltaQ,Fs; % dq, 100Hz
+                h.XsDataIdentifier_XDI_MagneticField,Fs}; % magnetic field, 100Hz
+        else
+            outputConfig_new = {h.XsDataIdentifier_XDI_PacketCounter,0;   % Packet counter, increments every packet.
+                h.XsDataIdentifier_XDI_SampleTimeFine,0;   % sample time fine
+                h.XsDataIdentifier_XDI_Quaternion,Fs; % orientation in quats, 100Hz
+                h.XsDataIdentifier_XDI_DeltaV,Fs; % dv, 100Hz
+                h.XsDataIdentifier_XDI_DeltaQ,Fs; % dq, 100Hz
+                h.XsDataIdentifier_XDI_MagneticField,Fs; % magnetic field, 100Hz
+                h.XsDataIdentifier_XDI_StatusWord,0};  % status word (contains clipping)
+        end
+        for iConnect = 1:num_ports
+            %set to the new configuration
+            h.XsDevice_setOutputConfiguration(device(iConnect),outputConfig_new);
+        end
+        
+        
+        %% Creating log file
+        for iConnect = 1:num_ports
+            filename = [cd '\logs\logfile_' dec2hex(deviceID(iConnect)) '.mtb'];
+            h.XsDevice_createLogFile(device(iConnect),filename);
+        end
+        
+
+        %% Entering measurement mode
+        for iConnect = 1:num_ports
+            % fprintf( '\n Activate measurement mode \n' );
+            h.XsDevice_gotoMeasurement(device(iConnect));
+            % start recording
+            h.XsDevice_startRecording(device(iConnect));
+            % fprintf('\n Logfile: %s created, start recording.\n',filename);
+        end
+        
+    end
+
+    %% Setup the vicon
+    function initializeVicon()
+        MyClient.Connect('localhost:801');
+        MyClient.SetStreamMode( StreamMode.ClientPull);
+        MyClient.GetFrame();
+        
+        MyClient.EnableMarkerData();
+        MyClient.EnableDeviceData();
+        
+    end
+
+    function closeConnection()
+        %% Disconnect and dispose
+        MyClient.Disconnect();
+        % Unload the SDK
+        
+        for iDisConnect = 1: num_ports
+            % Disabling channel
+            h.XsDevice_stopRecording(device(iDisConnect));
+        end
+        
+        for iDisConnect = 1: num_ports
+            h.XsDevice_closeLogFile(device(iDisConnect));
+            % close port and object
+        end
+        
+        for iDisConnect = 1: num_ports
+            % close port and object
+            h.XsControl_closePort(s{iDisConnect, 3});
+            h.XsControl_close();
+        end
+        delete(h); % release COM-object
+        clear h;
+    end
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-    function result = getFormattedResult
+    function result = getFormattedResult()
+        
+        fprintf( ' ...done \n' );
+        frame_total = vicon_frame_number(maxSamples) - vicon_frame_number(1);
+        fprintf(' There are : %d vicon frames \n', frame_total);
+        
         if saveExcelData
             for k = 1: num_ports
                 xlswrite(routeRes, {'Time Stamp'}, num2str(deviceID(k)), 'A1');
@@ -384,11 +361,16 @@ plot(result.vicon_data.vicon(1:maxSamples));
                     'IMU5', IMU5, 'IMU6', IMU6, 'IMU7', IMU7, 'IMU8', IMU8);
         end
         
-        vicon_data = struct('vicon', vicon_all_frame_number);
+        vicon_data = struct('frame_number', vicon_frame_number, 'subject_name', subject_name,...
+            'frame_rate', vicon_frame_rate);
         result.vicon_data = vicon_data;
         
-%         force_plate_data = xls
-%         result.force_plate_data = force_plate_data;
+        %         force_plate_data = xls
+        %         result.force_plate_data = force_plate_data;
+        
+        if saveMatData
+            save result result
+        end
     end
 end
 
