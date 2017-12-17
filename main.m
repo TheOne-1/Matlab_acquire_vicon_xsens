@@ -1,3 +1,5 @@
+% 根据多次实验，一开始获得的vicon frame与xsens data之间不对齐，但是程序稳定后就对的比较齐了
+
 function main
 clear
 clc
@@ -96,7 +98,7 @@ for i = 1:num_ports
 end
 
 %% preallocation
-maxSamples = 60000; % set size of data to be recorded
+maxSamples = 1000; % set size of data to be recorded
 maxSamplesPreLocate = round(maxSamples*1.05); % set size of data prelocated, because of eventhandling the
 % measured data can be more than maxSamples
 
@@ -137,6 +139,7 @@ h.registerevent({'onDataAvailable',@eventhandlerXsens});
 h.setCallbackOption(h.XsComCallbackOptions_XSC_Packet, h.XsComCallbackOptions_XSC_None);
 
 MyClient.GetFrame();
+MyClient.GetTimecode()
 vicon_start_end_number(1) = MyClient.GetFrameNumber().FrameNumber;
 % show events using h.events and h.eventlisteners too see which are registerd;
 
@@ -194,7 +197,7 @@ end
 
 
 % 用于比较vicon和xsens是否对齐
-plot(vicon_all_frame_number);
+plot(result.vicon_data.vicon(1:maxSamples)); 
 
 
 
@@ -217,7 +220,6 @@ plot(vicon_all_frame_number);
             MyClient.GetFrame();
             vicon_all_frame_number(iSample(1)) = MyClient.GetFrameNumber().FrameNumber;
         end
-        
         
         for j = 1: num_ports
             if id == deviceID(j)
@@ -246,25 +248,26 @@ plot(vicon_all_frame_number);
                     % getting quaternions, return the orientation component of a data item as a euler angles
                     euler_ls_xda(iSample(j), :, j)  = cell2mat(h.XsDataPacket_orientationEuler(dataPacket,h.XsDataIdentifier_XDI_CoordSysEnu));
                 end
-                
-                %                 clipData = 0;
-                %                 if h.XsDataPacket_containsStatus(dataPacket)
-                %                     % The status component of a data item.
-                %                     clipData = bitget(h.XsDataPacket_status(dataPacket),9:17)';
-                %                 end
-                %                 if any(clipData)
-                %                     clipFlags = logical(clipData);
-                %                     eval(['clip.IMU', num2str(j), '(', num2str(iSample(j)),...
-                %                         ').acc = clipFlags(1:3);']);
-                %                     eval(['clip.IMU', num2str(j), '(', num2str(iSample(j)),...
-                %                         ').gyr = clipFlags(4:6);']);
-                %                     eval(['clip.IMU', num2str(j), '(', num2str(iSample(j)),...
-                %                         ').mag = clipFlags(7:9);']);
-                %                 end
                 iSample(j) = iSample(j) + 1;
             end
         end
     end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     function result = getFormattedResult
         if saveExcelData
