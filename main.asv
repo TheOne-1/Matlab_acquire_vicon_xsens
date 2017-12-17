@@ -193,10 +193,7 @@ end
 % legend(num2str(deviceID(1)), num2str(deviceID(2)), num2str(deviceID(3)), num2str(deviceID(4)), num2str(deviceID(5)));
 
 
-% 用于比较vicon和xsens是否对齐
-plot(vicon_all_frame_number);
-
-
+% 用于比较
 
 
 
