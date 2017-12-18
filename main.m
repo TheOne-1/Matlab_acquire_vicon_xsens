@@ -34,7 +34,8 @@ MyClient = Client();
 initializeVicon();
 subject_name = MyClient.GetSubjectName(1).SubjectName;
 vicon_frame_rate = MyClient.GetFrameRate().FrameRateHz;
-marker_name = MyClient.GetMarkerName(subject_name, 4).MarkerName;
+marker_num = MyClient.GetMarkerCount(subject_name, 1).MarkerCount;
+marker_names = getMarkerNames();
 
 iSample = ones(1, num_ports, 'int64'); % counter of current point
 % data of xsens
@@ -42,10 +43,14 @@ gyr = zeros(maxSamplesPreLocate,3, num_ports);
 acc = zeros(maxSamplesPreLocate,3, num_ports);
 mag = zeros(maxSamplesPreLocate,3, num_ports);
 euler_ls_xda = zeros(maxSamplesPreLocate,3, num_ports);
-timeStamp = zeros(maxSamplesPreLocate,1, num_ports);
+timeStamp = zeros(maxSamplesPreLocate, 1, num_ports);
 
 % data of vicon
+marker_pos = zeros(maxSamplesPreLocate, 3, marker_num);
+unlabeled_marker_num = zeros(maxSamplesPreLocate, 1, 'unit8');
 vicon_frame_number = zeros(maxSamplesPreLocate, 1, 'int64');
+force_vector = zeros(maxSamplesPreLocate, 3, 2);
+center_of_pressure = zeros(maxSamplesPreLocate, 3, 2);
 
 
 
@@ -86,6 +91,17 @@ plot(result.vicon_data.vicon(1:maxSamples));
         if id == deviceID(1)
             MyClient.GetFrame();
             vicon_frame_number(iSample(1)) = MyClient.GetFrameNumber().FrameNumber;
+            unlabeled_marker_num(iSample(1)) =...
+                MyClient.GetUnlabeledMarkerCount().MarkerCount;
+            for iMarker = 1: marker_num
+                % if the marker was absent at this frame, the translation will be [0, 0, 0]
+                marker_pos(iSample(1), :, iMarker) = MyClient...
+                    .GetMarkerGlobalTranslation(subject_name, marker_names(iMarker)).Translation;
+            end
+            force_vector(iSample(1), :, 1) = GetGlobalForceVector(1).ForceVector;
+            force_vector(iSample(1), :, 2) = GetGlobalForceVector(2).ForceVector;
+            center_of_pressure(iSample(1), :, 1) = GetGlobalCentreOfPressure(1).CentreOfPressure;
+            center_of_pressure(iSample(1), :, 2) = GetGlobalCentreOfPressure(2).CentreOfPressure;
         end
         
         for j = 1: num_ports
@@ -126,7 +142,6 @@ plot(result.vicon_data.vicon(1:maxSamples));
             fprintf( '\n Connection ports scanned - nothing found. \n' );
             return
         else
-            fprintf( '\n Connection ports scanned \n' );
             % open port
             for iConnect = 1:num_ports
                 deviceID(iConnect) = s{iConnect, 1};
@@ -194,11 +209,9 @@ plot(result.vicon_data.vicon(1:maxSamples));
 
         %% Entering measurement mode
         for iConnect = 1:num_ports
-            % fprintf( '\n Activate measurement mode \n' );
             h.XsDevice_gotoMeasurement(device(iConnect));
             % start recording
             h.XsDevice_startRecording(device(iConnect));
-            % fprintf('\n Logfile: %s created, start recording.\n',filename);
         end
         
     end
@@ -212,6 +225,14 @@ plot(result.vicon_data.vicon(1:maxSamples));
         MyClient.EnableMarkerData();
         MyClient.EnableDeviceData();
         
+    end
+
+    function marker_names = getMarkerNames()
+        marker_names = cell(marker_num, 1);
+        for iMarkerName = 1:marker_num
+            marker_names(iMarkerName) = MyClient...
+                .GetMarkerName(subject_name, iMarkerName).MarkerName;
+        end
     end
 
     function closeConnection()
@@ -362,11 +383,9 @@ plot(result.vicon_data.vicon(1:maxSamples));
         end
         
         vicon_data = struct('frame_number', vicon_frame_number, 'subject_name', subject_name,...
-            'frame_rate', vicon_frame_rate);
+            'marker_names', marker_names, 'marker_pos', marker_pos, 'force_vector', force_vector,...
+            'CoP', center_of_pressure, 'unlabeled_marker_number', unlabeled_marker_num);
         result.vicon_data = vicon_data;
-        
-        %         force_plate_data = xls
-        %         result.force_plate_data = force_plate_data;
         
         if saveMatData
             save result result
