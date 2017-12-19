@@ -13,7 +13,7 @@ saveMatData = true;
 % right_COP_offset = [1.04; -16.6; -14.2];
 
 Fs = 100; % frequency of data
-maxSamples = 1000; % set size of data to be recorded
+maxSamples = 6000; % set size of data to be recorded
 maxSamplesPreLocate = round(maxSamples*1.05);
 
 %% define variables
@@ -33,8 +33,7 @@ Client.LoadViconDataStreamSDK();
 MyClient = Client();
 initializeVicon();
 subject_name = MyClient.GetSubjectName(1).SubjectName;
-vicon_frame_rate = MyClient.GetFrameRate().FrameRateHz;
-marker_num = MyClient.GetMarkerCount(subject_name, 1).MarkerCount;
+marker_num = MyClient.GetMarkerCount(subject_name).MarkerCount;
 marker_names = getMarkerNames();
 
 iSample = ones(1, num_ports, 'int64'); % counter of current point
@@ -47,7 +46,7 @@ timeStamp = zeros(maxSamplesPreLocate, 1, num_ports);
 
 % data of vicon
 marker_pos = zeros(maxSamplesPreLocate, 3, marker_num);
-unlabeled_marker_num = zeros(maxSamplesPreLocate, 1, 'unit8');
+unlabeled_marker_num = zeros(maxSamplesPreLocate, 1, 'uint8');
 vicon_frame_number = zeros(maxSamplesPreLocate, 1, 'int64');
 force_vector = zeros(maxSamplesPreLocate, 3, 2);
 center_of_pressure = zeros(maxSamplesPreLocate, 3, 2);
@@ -77,8 +76,8 @@ result = getFormattedResult();
 
 
 % 用于比较vicon和xsens是否对齐
-plot(result.vicon_data.vicon(1:maxSamples)); 
-
+% plot(result.vicon_data.vicon(1:maxSamples)); 
+return;
 
 %% 每当Client收到Xsens的数据，都会回调该函数
     function eventhandlerXsens(varargin)
@@ -91,17 +90,20 @@ plot(result.vicon_data.vicon(1:maxSamples));
         if id == deviceID(1)
             MyClient.GetFrame();
             vicon_frame_number(iSample(1)) = MyClient.GetFrameNumber().FrameNumber;
-            unlabeled_marker_num(iSample(1)) =...
-                MyClient.GetUnlabeledMarkerCount().MarkerCount;
+            absent_counter = uint8(0);
             for iMarker = 1: marker_num
-                % if the marker was absent at this frame, the translation will be [0, 0, 0]
-                marker_pos(iSample(1), :, iMarker) = MyClient...
-                    .GetMarkerGlobalTranslation(subject_name, marker_names(iMarker)).Translation;
+                pos_result = MyClient.GetMarkerGlobalTranslation(subject_name, char(marker_names(iMarker)));
+                if pos_result.Occluded
+                    absent_counter = absent_counter + 1;
+                else 
+                    marker_pos(iSample(1), :, iMarker) = pos_result.Translation;
+                end
             end
-            force_vector(iSample(1), :, 1) = GetGlobalForceVector(1).ForceVector;
-            force_vector(iSample(1), :, 2) = GetGlobalForceVector(2).ForceVector;
-            center_of_pressure(iSample(1), :, 1) = GetGlobalCentreOfPressure(1).CentreOfPressure;
-            center_of_pressure(iSample(1), :, 2) = GetGlobalCentreOfPressure(2).CentreOfPressure;
+            unlabeled_marker_num(iSample(1)) = absent_counter;
+            force_vector(iSample(1), :, 1) = MyClient.GetGlobalForceVector(1).ForceVector;
+            force_vector(iSample(1), :, 2) = MyClient.GetGlobalForceVector(2).ForceVector;
+            center_of_pressure(iSample(1), :, 1) = MyClient.GetGlobalCentreOfPressure(1).CentreOfPressure;
+            center_of_pressure(iSample(1), :, 2) = MyClient.GetGlobalCentreOfPressure(2).CentreOfPressure;
         end
         
         for j = 1: num_ports
@@ -230,8 +232,8 @@ plot(result.vicon_data.vicon(1:maxSamples));
     function marker_names = getMarkerNames()
         marker_names = cell(marker_num, 1);
         for iMarkerName = 1:marker_num
-            marker_names(iMarkerName) = MyClient...
-                .GetMarkerName(subject_name, iMarkerName).MarkerName;
+            marker_names(iMarkerName) = cellstr(MyClient...
+                .GetMarkerName(subject_name, iMarkerName).MarkerName);
         end
     end
 
@@ -257,6 +259,7 @@ plot(result.vicon_data.vicon(1:maxSamples));
         end
         delete(h); % release COM-object
         clear h;
+        fprintf( ' Finished reading... \n' );
     end
 
 
@@ -382,9 +385,19 @@ plot(result.vicon_data.vicon(1:maxSamples));
                     'IMU5', IMU5, 'IMU6', IMU6, 'IMU7', IMU7, 'IMU8', IMU8);
         end
         
-        vicon_data = struct('frame_number', vicon_frame_number, 'subject_name', subject_name,...
-            'marker_names', marker_names, 'marker_pos', marker_pos, 'force_vector', force_vector,...
-            'CoP', center_of_pressure, 'unlabeled_marker_number', unlabeled_marker_num);
+        vicon_pos_data = struct();
+        for iMarkerPos = 1:marker_num
+            eval(['vicon_pos_data.', char(marker_names(iMarkerPos)), ' = marker_pos(:, :, iMarkerPos);']);
+        end
+        
+        vicon_pos_data.frame_number = vicon_frame_number;
+        vicon_pos_data.subject_name = subject_name;
+        vicon_pos_data.unlabeled_marker_num = unlabeled_marker_num;
+        
+        force_plate_data = struct('force_left', force_vector(:, :, 1), 'CoP_left', center_of_pressure(:, :, 1),...
+            'force_right', force_vector(:, :, 2), 'CoP_right', center_of_pressure(:, :, 2));
+        
+        vicon_data = struct('marker_pos_data', vicon_pos_data, 'force_plate_data', force_plate_data);
         result.vicon_data = vicon_data;
         
         if saveMatData

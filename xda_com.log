@@ -1,0 +1,60 @@
+1513652551.061 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652551.134 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652551.206 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652551.240 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513652580.461 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652580.497 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652580.561 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652580.595 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513652611.591 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652611.627 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652611.678 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652611.712 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513652716.899 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652716.934 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652716.978 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652717.011 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513652740.642 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652740.677 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652740.741 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652740.774 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513652875.983 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652876.017 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652876.062 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652876.095 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513652899.285 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652899.319 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652899.376 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652899.409 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513652941.519 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513652941.553 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513652941.614 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513652941.647 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513653302.432 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513653302.467 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513653302.532 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513653302.565 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513653492.660 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513653492.693 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513653492.737 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513653492.770 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513654697.243 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513654697.277 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513654697.325 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513654697.358 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513654754.991 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513654755.025 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513654755.072 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513654755.105 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513654893.075 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513654893.109 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513654893.156 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513654893.189 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513655454.087 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513655454.121 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513655454.169 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513655454.202 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
+1513655699.619 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 0370064C has firmware version 1.4.5 build 85 rev 50112
+1513655699.654 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 0370064C and firmware version: 1.4.5 build 85 rev 50112
+1513655699.717 <12CC> [WRITE] XsDevice::extractFirmwareVersion Device 077007B9 has firmware version 1.4.1 build 34 rev 39961
+1513655699.750 <12CC> [WRITE] DeviceFactory::createMasterDevice Created master device with id: 077007B9 and firmware version: 1.4.1 build 34 rev 39961
